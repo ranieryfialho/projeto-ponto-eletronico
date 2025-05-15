@@ -11,7 +11,7 @@ const users = [
         id: 1,
         email: 'ranieryfialho@gmail.com',
         senha: '123456',
-        nome: 'Administrador'
+        nome: 'Admin'
     },
 ];
 
