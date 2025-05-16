@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
+import PontoButton from './components/PontoButton';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -46,6 +47,10 @@ function App() {
           <div className="bg-white p-6 rounded shadow-md max-w-md mx-auto">
             <h2 className="text-lg font-semibold mb-4">Registrar Ponto</h2>
             <p>Este será o local das validações</p>
+
+            <div className="text-center mt-6">
+              <PontoButton />
+            </div>
           </div>
         </>
       )}
