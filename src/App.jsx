@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
-import PontoButton from './components/PontoButton';
+import PontoButtonComTipo from './components/PontoButtonComTipo';
+import HistoricoPontosTabela from './components/HistoricoPontosTabela';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
 
-  // Recupera do localStorage ao carregar
+  const [registros, setRegistros] = useState(() => {
+    return JSON.parse(localStorage.getItem("registrosPontoDetalhado")) || [];
+  });
+
   useEffect(() => {
     const usuarioSalvo = localStorage.getItem('usuario');
     if (usuarioSalvo) {
@@ -14,13 +18,17 @@ function App() {
     }
   }, []);
 
-  // Função de login
+  function adicionarPonto(novoRegistro) {
+    const atualizados = [...registros, novoRegistro];
+    setRegistros(atualizados);
+    localStorage.setItem("registrosPontoDetalhado", JSON.stringify(atualizados));
+  }
+
   function handleLogin(nome) {
     setUsuario(nome);
     localStorage.setItem('usuario', nome);
   }
 
-  // Função de logout
   function handleLogout() {
     setUsuario(null);
     localStorage.removeItem('usuario');
@@ -32,7 +40,7 @@ function App() {
         <Login onLogin={handleLogin} />
       ) : (
         <>
-          <div className="flex items-center justify-center gap-18 mb-4">
+          <div className="flex items-center justify-center gap-4 mb-6">
             <p className="text-xl font-medium text-center">
               Bem-vindo, {usuario}! 👋
             </p>
@@ -44,18 +52,12 @@ function App() {
             </button>
           </div>
 
-          <div className="bg-white p-6 rounded shadow-md max-w-md mx-auto">
-            <h2 className="text-lg font-semibold mb-4">Registrar Ponto</h2>
-            <p>Este será o local das validações</p>
-
-            <div className="text-center mt-6">
-              <PontoButton />
-            </div>
-          </div>
+          <PontoButtonComTipo onPontoRegistrado={adicionarPonto} />
+          <HistoricoPontosTabela registros={registros} />
         </>
       )}
     </MainLayout>
   );
 }
 
-export default App;
+export default App; 
