@@ -78,23 +78,26 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 w-full px-4 mb-6 max-w-6xl mx-auto">
-      {/* Saudação + Sair */}
-      <div className="flex items-center gap-2">
-        <p className="text-base sm:text-lg font-medium">
-          Bem-vindo, {usuario}! 👋
+    <div className="w-full max-w-6xl px-4 mx-auto flex flex-col gap-6">
+      {/* Linha 1: Saudação + Botão sair */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
+        <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">
+          Olá, {usuario}! 👋
         </p>
         <button
           onClick={onLogout}
-          className="px-3 py-1 bg-red-600 text-white rounded shadow hover:bg-red-700 text-sm"
+          className="px-4 py-2 bg-red-600 text-white rounded shadow hover:bg-red-700 text-sm"
         >
           Sair
         </button>
       </div>
 
-      {/* Seletor + Botão */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor="tipo" className="text-sm font-medium">
+      {/* Linha 2: Tipo de Registro + Botão */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full sm:w-auto">
+        <label
+          htmlFor="tipo"
+          className="text-base sm:text-base font-medium text-gray-700 w-full text-center sm:text-left"
+        >
           Tipo de Registro:
         </label>
         <select
@@ -111,7 +114,7 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
         </select>
         <button
           onClick={registrarPonto}
-          className="px-4 py-2 bg-indigo-600 text-white font-bold rounded hover:bg-indigo-700 transition text-sm"
+          className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white font-bold rounded hover:bg-indigo-700 transition text-sm whitespace-nowrap"
         >
           Registrar Ponto
         </button>
@@ -120,7 +123,7 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
       {/* Mensagem de status */}
       {status?.mensagem && (
         <div
-          className={`text-sm px-4 py-2 rounded shadow ${
+          className={`text-sm px-4 py-2 rounded shadow max-w-xl mx-auto ${
             status.tipo === "sucesso"
               ? "bg-green-100 text-green-700 border border-green-300"
               : status.tipo === "erro"

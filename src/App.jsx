@@ -40,18 +40,6 @@ function App() {
         <Login onLogin={handleLogin} />
       ) : (
         <>
-          {/* <div className="flex items-center justify-center gap-4 mb-6">
-            <p className="text-xl font-medium text-center">
-              Bem-vindo, {usuario}! 👋
-            </p>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition duration-300"
-            >
-              Sair
-            </button>
-          </div> */}
-
           <PontoButtonComTipo
             usuario={usuario}
             onLogout={handleLogout}
