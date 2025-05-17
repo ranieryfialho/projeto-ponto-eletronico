@@ -74,7 +74,7 @@ export default function PontoButtonComTipo({ onPontoRegistrado }) {
     }
 
     return (
-        <div className="text-center space-y-4 mt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
             <div className="flex items-center justify-center gap-2">
                 <label htmlFor="tipo" className="text-sm font-medium text-gray-700">
                     Tipo de Registro:
@@ -92,7 +92,6 @@ export default function PontoButtonComTipo({ onPontoRegistrado }) {
                     ))}
                 </select>
             </div>
-
 
             <button
                 onClick={registrarPonto}
