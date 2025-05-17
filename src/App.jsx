@@ -40,7 +40,7 @@ function App() {
         <Login onLogin={handleLogin} />
       ) : (
         <>
-          <div className="flex items-center justify-center gap-4 mb-6">
+          {/* <div className="flex items-center justify-center gap-4 mb-6">
             <p className="text-xl font-medium text-center">
               Bem-vindo, {usuario}! 👋
             </p>
@@ -50,9 +50,13 @@ function App() {
             >
               Sair
             </button>
-          </div>
+          </div> */}
 
-          <PontoButtonComTipo onPontoRegistrado={adicionarPonto} />
+          <PontoButtonComTipo
+            usuario={usuario}
+            onLogout={handleLogout}
+            onPontoRegistrado={adicionarPonto}
+          />
           <HistoricoPontosTabela registros={registros} />
         </>
       )}
