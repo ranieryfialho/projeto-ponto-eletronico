@@ -1,17 +1,26 @@
-import { useEffect, useState } from "react";
+"use client"
+
+import { useEffect, useState } from "react"
 
 export default function HistoricoPontosTabela({ usuario }) {
-  const [registrosPorData, setRegistrosPorData] = useState({});
+  const [registrosPorData, setRegistrosPorData] = useState({})
+
+  // Função para formatar a data corretamente
+  function formatarData(dataString) {
+    // Garantir que a data seja interpretada corretamente
+    const [ano, mes, dia] = dataString.split("-")
+    return `${dia}/${mes}/${ano}`
+  }
 
   useEffect(() => {
     async function carregarRegistros() {
-      if (!usuario) return;
+      if (!usuario) return
 
       try {
-        const res = await fetch(`http://localhost:3001/registros/${usuario}`);
-        const dados = await res.json();
+        const res = await fetch(`http://localhost:3001/registros/${usuario}`)
+        const dados = await res.json()
 
-        const agrupado = {};
+        const agrupado = {}
 
         dados.forEach(({ tipo, data, hora }) => {
           if (!agrupado[data]) {
@@ -21,21 +30,21 @@ export default function HistoricoPontosTabela({ usuario }) {
               "intervalo-retorno": "",
               saida: "",
               "extra-entrada": "",
-              "extra-saida": ""
-            };
+              "extra-saida": "",
+            }
           }
 
-          agrupado[data][tipo] = hora;
-        });
+          agrupado[data][tipo] = hora
+        })
 
-        setRegistrosPorData(agrupado);
+        setRegistrosPorData(agrupado)
       } catch (err) {
-        console.error("Erro ao carregar registros:", err);
+        console.error("Erro ao carregar registros:", err)
       }
     }
 
-    carregarRegistros();
-  }, [usuario]);
+    carregarRegistros()
+  }, [usuario])
 
   const colunas = [
     { key: "entrada", label: "Entrada" },
@@ -43,17 +52,13 @@ export default function HistoricoPontosTabela({ usuario }) {
     { key: "intervalo-retorno", label: "Intervalo / Retorno" },
     { key: "saida", label: "Saída" },
     { key: "extra-entrada", label: "Extras Entrada" },
-    { key: "extra-saida", label: "Extras Saída" }
-  ];
+    { key: "extra-saida", label: "Extras Saída" },
+  ]
 
-  const datas = Object.keys(registrosPorData).sort((a, b) => new Date(b) - new Date(a));
+  const datas = Object.keys(registrosPorData).sort((a, b) => new Date(b) - new Date(a))
 
   if (datas.length === 0) {
-    return (
-      <div className="mt-8 text-center text-gray-500 text-sm">
-        Nenhum registro ainda.
-      </div>
-    );
+    return <div className="mt-8 text-center text-gray-500 text-sm">Nenhum registro ainda.</div>
   }
 
   return (
@@ -63,16 +68,16 @@ export default function HistoricoPontosTabela({ usuario }) {
           <tr>
             <th className="border px-2 py-2">📅 Data</th>
             {colunas.map((col) => (
-              <th key={col.key} className="border px-2 py-2">{col.label}</th>
+              <th key={col.key} className="border px-2 py-2">
+                {col.label}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {datas.map((data) => (
             <tr key={data}>
-              <td className="border px-2 py-1 font-medium">
-                {new Date(data).toLocaleDateString()}
-              </td>
+              <td className="border px-2 py-1 font-medium">{formatarData(data)}</td>
               {colunas.map((col) => (
                 <td key={col.key} className="border px-2 py-1">
                   {registrosPorData[data][col.key] || "-"}
@@ -83,5 +88,5 @@ export default function HistoricoPontosTabela({ usuario }) {
         </tbody>
       </table>
     </div>
-  );
+  )
 }
