@@ -1,28 +1,41 @@
 import { useEffect, useState } from "react";
 
-export default function HistoricoPontosTabela({ registros = [] }) {
+export default function HistoricoPontosTabela({ usuario }) {
   const [registrosPorData, setRegistrosPorData] = useState({});
 
   useEffect(() => {
-    // Agrupar registros por data e tipo
-    const agrupado = {};
+    async function carregarRegistros() {
+      if (!usuario) return;
 
-    registros.forEach(({ data, tipo, hora }) => {
-      if (!agrupado[data]) {
-        agrupado[data] = {
-          entrada: "",
-          "intervalo-saida": "",
-          "intervalo-retorno": "",
-          saida: "",
-          "extra-entrada": "",
-          "extra-saida": ""
-        };
+      try {
+        const res = await fetch(`http://localhost:3001/registros/${usuario}`);
+        const dados = await res.json();
+
+        const agrupado = {};
+
+        dados.forEach(({ tipo, data, hora }) => {
+          if (!agrupado[data]) {
+            agrupado[data] = {
+              entrada: "",
+              "intervalo-saida": "",
+              "intervalo-retorno": "",
+              saida: "",
+              "extra-entrada": "",
+              "extra-saida": ""
+            };
+          }
+
+          agrupado[data][tipo] = hora;
+        });
+
+        setRegistrosPorData(agrupado);
+      } catch (err) {
+        console.error("Erro ao carregar registros:", err);
       }
-      agrupado[data][tipo] = hora;
-    });
+    }
 
-    setRegistrosPorData(agrupado);
-  }, [registros]);
+    carregarRegistros();
+  }, [usuario]);
 
   const colunas = [
     { key: "entrada", label: "Entrada" },

@@ -1,56 +1,63 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
 import PontoButtonComTipo from './components/PontoButtonComTipo';
 import HistoricoPontosTabela from './components/HistoricoPontosTabela';
+import CadastroUsuariosPage from './pages/CadastroUsuariosPage';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
 
-  const [registros, setRegistros] = useState(() => {
-    return JSON.parse(localStorage.getItem("registrosPontoDetalhado")) || [];
-  });
-
   useEffect(() => {
-    const usuarioSalvo = localStorage.getItem('usuario');
-    if (usuarioSalvo) {
-      setUsuario(usuarioSalvo);
+    const salvo = sessionStorage.getItem("usuario");
+    if (salvo) {
+      setUsuario(JSON.parse(salvo));
     }
   }, []);
 
-  function adicionarPonto(novoRegistro) {
-    const atualizados = [...registros, novoRegistro];
-    setRegistros(atualizados);
-    localStorage.setItem("registrosPontoDetalhado", JSON.stringify(atualizados));
-  }
-
-  function handleLogin(nome) {
-    setUsuario(nome);
-    localStorage.setItem('usuario', nome);
+  function handleLogin(dados) {
+    setUsuario(dados);
+    sessionStorage.setItem("usuario", JSON.stringify(dados));
   }
 
   function handleLogout() {
     setUsuario(null);
-    localStorage.removeItem('usuario');
+    sessionStorage.removeItem("usuario");
   }
 
   return (
-    <MainLayout>
-      {!usuario ? (
-        <Login onLogin={handleLogin} />
-      ) : (
-        <>
-          <PontoButtonComTipo
-            usuario={usuario}
-            onLogout={handleLogout}
-            onPontoRegistrado={adicionarPonto}
-          />
+    <Router>
+      <MainLayout>
+        <Routes>
+          {!usuario ? (
+            <Route path="*" element={<Login onLogin={handleLogin} />} />
+          ) : (
+            <>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <PontoButtonComTipo
+                      usuario={usuario.email}
+                      onLogout={handleLogout}
+                      onPontoRegistrado={() => {}}
+                    />
+                    <HistoricoPontosTabela usuario={usuario.email} />
+                  </>
+                }
+              />
 
-          <HistoricoPontosTabela registros={registros} />
-        </>
-      )}
-    </MainLayout>
+              {usuario.role === 'admin' && (
+                <Route path="/admin/cadastro" element={<CadastroUsuariosPage />} />
+              )}
+              <Route path="*" element={<Navigate to="/" />} />
+            </>
+          )}
+        </Routes>
+      </MainLayout>
+    </Router>
   );
 }
 
-export default App; 
+export default App;
