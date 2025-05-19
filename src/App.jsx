@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import PontoButtonComTipo from './components/PontoButtonComTipo';
 import HistoricoPontosTabela from './components/HistoricoPontosTabela';
 import CadastroUsuariosPage from './pages/CadastroUsuariosPage';
+import AdminColaboradoresPage from './pages/AdminColaboradoresPage'; // ⬅️ import novo
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -48,9 +49,23 @@ function App() {
                 }
               />
 
+              {/* Rota para cadastro de usuário (apenas admin) */}
               {usuario.role === 'admin' && (
-                <Route path="/admin/cadastro" element={<CadastroUsuariosPage />} />
+                <Route
+                  path="/admin/cadastro"
+                  element={<CadastroUsuariosPage />}
+                />
               )}
+
+              {/* Rota para gestão de colaboradores (apenas admin) */}
+              {usuario.role === 'admin' && (
+                <Route
+                  path="/admin/colaboradores"
+                  element={<AdminColaboradoresPage />}
+                />
+              )}
+
+              {/* Redireciona qualquer outra rota para a home */}
               <Route path="*" element={<Navigate to="/" />} />
             </>
           )}

@@ -5,5 +5,17 @@
     "senha": "123456",
     "cpf": "000.000.000-00",
     "role": "admin"
+  },
+  {
+    "nome": "Raniery Fialho Arruda",
+    "email": "ranieryfialho@gmail.com",
+    "senha": "123456",
+    "cpf": "05551088308",
+    "role": "user",
+    "funcao": "Coordenador de Ensino",
+    "horaEntrada": "07:30",
+    "horaIntervaloSaida": "11:30",
+    "horaIntervaloRetorno": "13:30",
+    "horaSaida": "17:30"
   }
 ]
