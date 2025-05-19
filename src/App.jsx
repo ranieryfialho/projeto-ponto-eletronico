@@ -39,7 +39,7 @@ function App() {
                 element={
                   <>
                     <PontoButtonComTipo
-                      usuario={usuario.email}
+                      usuario={usuario}
                       onLogout={handleLogout}
                       onPontoRegistrado={() => {}}
                     />

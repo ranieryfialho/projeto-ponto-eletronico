@@ -119,12 +119,12 @@ app.post('/login', (req, res) => {
 
 // POST /usuarios → cadastro de novo usuário
 app.post('/usuarios', (req, res) => {
-  const { email, senha, cpf, role = 'user' } = req.body;
+  const { nome, email, senha, cpf, role = 'user' } = req.body;
 
   console.log('➕ Criando novo usuário:', email);
 
-  if (!email || !senha || !cpf) {
-    return res.status(400).json({ mensagem: 'Email, senha e CPF são obrigatórios.' });
+  if (!nome || !email || !senha || !cpf) {
+    return res.status(400).json({ mensagem: 'Nome, email, senha e CPF são obrigatórios.' });
   }
 
   try {
@@ -136,7 +136,7 @@ app.post('/usuarios', (req, res) => {
       return res.status(409).json({ mensagem: 'Usuário já existe.' });
     }
 
-    usuarios.push({ email, senha, cpf, role });
+    usuarios.push({ nome, email, senha, cpf, role });
     fs.writeFileSync(USERS_PATH, JSON.stringify(usuarios, null, 2));
 
     res.status(201).json({ mensagem: 'Usuário criado com sucesso.' });
@@ -145,6 +145,7 @@ app.post('/usuarios', (req, res) => {
     res.status(500).json({ mensagem: 'Erro ao criar usuário.' });
   }
 });
+
 
 
 app.listen(PORT, () => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export default function PainelCadastroUsuarios() {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [cpf, setCpf] = useState('');
@@ -18,13 +19,14 @@ export default function PainelCadastroUsuarios() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, senha, cpf })
+        body: JSON.stringify({ nome, email, senha, cpf })
       });
 
       const dados = await res.json();
 
       if (res.ok) {
         setMensagem("✅ Usuário cadastrado com sucesso!");
+        setNome('');
         setEmail('');
         setSenha('');
         setCpf('');
@@ -43,6 +45,14 @@ export default function PainelCadastroUsuarios() {
     <div className="mt-8 max-w-lg mx-auto p-6 bg-white rounded shadow">
       <h3 className="text-xl font-semibold mb-4 text-center">Cadastro de Novo Usuário</h3>
       <form onSubmit={handleCadastro} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Nome completo"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          className="w-full p-2 border rounded"
+          required
+        />
         <input
           type="email"
           placeholder="Email do usuário"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -6,10 +6,18 @@ export default function Login({ onLogin }) {
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
 
+  useEffect(() => {
+    // Bloqueia rolagem da tela apenas na tela de login
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
   async function handleLogin(e) {
     e.preventDefault();
-    setCarregando(true);
     setMensagem('');
+    setCarregando(true);
 
     try {
       const res = await fetch("http://localhost:3001/login", {
@@ -23,14 +31,17 @@ export default function Login({ onLogin }) {
       const dados = await res.json();
 
       if (res.ok) {
-        setMensagem("✅ Login realizado com sucesso!");
-        // Envia para o App: email, role e opcionalmente cpf
-        onLogin({ email: dados.email, role: dados.role, cpf: dados.cpf });
+        onLogin({
+          email: dados.email,
+          nome: dados.nome,
+          role: dados.role,
+          cpf: dados.cpf
+        });
       } else {
         setMensagem(`❌ ${dados.mensagem}`);
       }
     } catch (err) {
-      console.error("Erro na requisição:", err);
+      console.error("Erro ao fazer login:", err);
       setMensagem("❌ Erro ao conectar com o servidor.");
     }
 
@@ -38,9 +49,9 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-20 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-      <form onSubmit={handleLogin} className="space-y-4">
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-80 space-y-4">
+        <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
         <input
           type="email"
           placeholder="Email"
@@ -60,7 +71,7 @@ export default function Login({ onLogin }) {
         <button
           type="submit"
           disabled={carregando}
-          className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition"
+          className="w-full bg-indigo-900 text-white py-2 rounded hover:bg-indigo-800 transition"
         >
           {carregando ? "Entrando..." : "Entrar"}
         </button>

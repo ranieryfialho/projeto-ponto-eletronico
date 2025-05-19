@@ -10,8 +10,9 @@ export default function MainLayout({ children }) {
     return (
         <div className="flex flex-col min-h-screen">
             <header className="bg-indigo-950 text-white p-4 shadow flex justify-between items-center">
-                <h1 className="text-xl font-bold">Sistema de Ponto Eletrônico</h1>
-
+                <h1 className="text-xl font-bold">
+                    Sistema de Ponto Eletrônico
+                </h1>
                 {/* Botão sanduíche (somente admins) */}
                 {usuario?.role === 'admin' && (
                     <div className="relative">

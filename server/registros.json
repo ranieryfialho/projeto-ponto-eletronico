@@ -3,7 +3,12 @@
     {
       "tipo": "entrada",
       "data": "2025-05-19",
-      "hora": "15:30:37"
+      "hora": "16:24:19"
+    },
+    {
+      "tipo": "intervalo-saida",
+      "data": "2025-05-19",
+      "hora": "17:09:20"
     }
   ]
 }

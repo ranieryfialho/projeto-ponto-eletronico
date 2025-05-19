@@ -35,7 +35,12 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
           const hora = agora.toLocaleTimeString();
 
-          const novoRegistro = { usuario, tipo, data, hora };
+          const novoRegistro = {
+            usuario: usuario.email,
+            tipo,
+            data,
+            hora
+          };
 
           fetch("http://localhost:3001/registros", {
             method: "POST",
@@ -93,7 +98,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
       {/* Saudação + Botão sair */}
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
         <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">
-          Olá, {usuario}! 👋
+          Olá, {usuario.nome}! 👋
         </p>
         <button
           onClick={onLogout}
@@ -103,32 +108,35 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
         </button>
       </div>
 
-      {/* Tipo de Registro + Botão */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full sm:w-auto">
-        <label
-          htmlFor="tipo"
-          className="text-base font-medium text-gray-700 w-full text-center sm:text-left"
-        >
-          Tipo de Registro:
-        </label>
-        <select
-          id="tipo"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          className="px-4 py-2 border rounded-md text-sm w-full sm:w-auto"
-        >
-          {tiposDisponiveis.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={registrarPonto}
-          className="w-full sm:w-auto px-4 py-2 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition text-sm whitespace-nowrap"
-        >
-          Registrar Ponto
-        </button>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 w-full max-w-5xl">
+        {/* Label + Select */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <label htmlFor="tipo" className="text-base font-medium text-gray-700">
+            Tipo de Registro:
+          </label>
+          <select
+            id="tipo"
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            className="px-4 py-2 border rounded-md text-sm w-full sm:w-auto"
+          >
+            {tiposDisponiveis.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Botão à direita no desktop, abaixo no mobile */}
+        <div className="w-full sm:w-auto flex justify-center sm:justify-end">
+          <button
+            onClick={registrarPonto}
+            className="px-4 py-2 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition text-sm whitespace-nowrap w-full sm:w-auto"
+          >
+            Registrar Ponto
+          </button>
+        </div>
       </div>
 
       {/* Feedback visual */}
