@@ -35,21 +35,48 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
           const data = agora.toISOString().split("T")[0];
           const hora = agora.toLocaleTimeString();
 
-          const novoRegistro = { tipo, data, hora };
+          const novoRegistro = { 
+            usuario,
+            tipo, 
+            data, 
+            hora 
+          };
 
-          const registros = JSON.parse(localStorage.getItem("registrosPontoDetalhado")) || [];
-          registros.push(novoRegistro);
-          localStorage.setItem("registrosPontoDetalhado", JSON.stringify(registros));
+          // Envia para o servidor
+          fetch("http://localhost:3001/registros", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(novoRegistro),
+          })
+            .then((res) => {
+              if (!res.ok) throw new Error("Erro ao enviar registro para o servidor");
+              return res.json();
+            })
+            .then((dados) => {
+              // Atualiza local e estado apenas após sucesso
+              const registros = JSON.parse(localStorage.getItem("registrosPontoDetalhado")) || [];
+              registros.push(novoRegistro);
+              localStorage.setItem("registrosPontoDetalhado", JSON.stringify(registros));
 
-          if (onPontoRegistrado) {
-            onPontoRegistrado(novoRegistro);
-          }
+              if (onPontoRegistrado) {
+                onPontoRegistrado(novoRegistro);
+              }
 
-          setStatus({
-            tipo: "sucesso",
-            mensagem: `✅ ${tipoFormatado(tipo)} registrado com sucesso!`,
-            hora,
-          });
+              setStatus({
+                tipo: "sucesso",
+                mensagem: dados.mensagem || "Registro salvo e enviado!",
+                hora,
+              });
+            })
+            .catch((err) => {
+              setStatus({
+                tipo: "erro",
+                mensagem: "❌ Erro ao enviar para o servidor.",
+              });
+              console.error(err);
+            });
         } else {
           setStatus({ tipo: "erro", mensagem: "❌ Fora da geolocalização permitida." });
         }
@@ -79,9 +106,9 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
 
   return (
     <div className="w-full max-w-6xl px-4 mx-auto flex flex-col gap-6">
-      {/* Linha 1: Saudação + Botão sair */}
+      {/* Saudação + Botão sair */}
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
-        <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">
+        <p className="text-base sm:text-lg font-medium text-center sm:text-left">
           Olá, {usuario}! 👋
         </p>
         <button
@@ -92,7 +119,7 @@ export default function PontoButtonComTipo({ onPontoRegistrado, usuario, onLogou
         </button>
       </div>
 
-      {/* Linha 2: Tipo de Registro + Botão */}
+      {/* Tipo de Registro + Botão Registrar */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full sm:w-auto">
         <label
           htmlFor="tipo"

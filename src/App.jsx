@@ -45,6 +45,7 @@ function App() {
             onLogout={handleLogout}
             onPontoRegistrado={adicionarPonto}
           />
+
           <HistoricoPontosTabela registros={registros} />
         </>
       )}
