@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import dayjs from "dayjs"
 
-export default function DashboardAdmin() {
+export default function DashboardAdmin({ onLogout }) {
   const [usuarios, setUsuarios] = useState([])
   const [registros, setRegistros] = useState({})
 
@@ -34,15 +34,22 @@ export default function DashboardAdmin() {
 
   return (
     <div className="h-full w-full bg-gray-100">
-      {/* Container principal com padding consistente e overflow adequado */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">
-          <span role="img" aria-label="gráfico">
-            📈
-          </span>{" "}
-          Dashboard Administrativo
-        </h1>
+        {/* Título e botão de saída */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+            <span role="img" aria-label="gráfico">📈</span>
+            Dashboard Administrativo
+          </h1>
+          <button
+            onClick={onLogout}
+            className="bg-red-700 text-white px-4 py-2 rounded-md shadow hover:bg-red-600 transition"
+          >
+            Sair
+          </button>
+        </div>
 
+        {/* Cards de resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
           <InfoCard title="Total de colaboradores" value={colaboradores.length} />
           <InfoCard title="Registros de ponto hoje" value={registrosHoje.length} />
@@ -50,10 +57,9 @@ export default function DashboardAdmin() {
           <InfoCard title="Ainda não bateram ponto" value={colaboradores.length - pontuaramHoje} />
         </div>
 
+        {/* Tabela de registros */}
         <h2 className="text-xl font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <span role="img" aria-label="relógio">
-            🕒
-          </span>{" "}
+          <span role="img" aria-label="relógio">🕒</span>
           Últimos registros de hoje
         </h2>
 

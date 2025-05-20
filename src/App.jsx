@@ -6,7 +6,7 @@ import PontoButtonComTipo from './components/PontoButtonComTipo';
 import HistoricoPontosTabela from './components/HistoricoPontosTabela';
 import CadastroUsuariosPage from './pages/CadastroUsuariosPage';
 import AdminColaboradoresPage from './pages/AdminColaboradoresPage';
-import DashboardAdmin from './components/DashboardAdmin'; // ✅ Import necessário
+import DashboardAdmin from './components/DashboardAdmin';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -36,12 +36,12 @@ function App() {
             <Route path="*" element={<Login onLogin={handleLogin} />} />
           ) : (
             <>
-              {/* Rota principal se adapta conforme o tipo de usuário */}
+              {/* Rota principal adaptável ao tipo de usuário */}
               <Route
                 path="/"
                 element={
                   usuario.role === "admin" ? (
-                    <DashboardAdmin />
+                    <DashboardAdmin onLogout={handleLogout} />
                   ) : (
                     <>
                       <PontoButtonComTipo
