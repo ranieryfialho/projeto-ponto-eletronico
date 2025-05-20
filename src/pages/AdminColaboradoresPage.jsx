@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 
 export default function AdminColaboradoresPage() {
   const [usuarios, setUsuarios] = useState([]);
@@ -10,6 +11,7 @@ export default function AdminColaboradoresPage() {
   const [mensagem, setMensagem] = useState('');
   const [registrosDoDia, setRegistrosDoDia] = useState([]);
   const [dataSelecionada, setDataSelecionada] = useState(dayjs().format('YYYY-MM-DD'));
+  const [filtro, setFiltro] = useState('');
 
   useEffect(() => {
     buscarUsuarios();
@@ -72,122 +74,153 @@ export default function AdminColaboradoresPage() {
     return "";
   }
 
-  function exportarPDF() {
+  async function exportarPDF() {
+    const res = await fetch(`http://localhost:3001/registros/${usuarioEditando.email}`);
+    const todosRegistros = await res.json();
+
+    const mesSelecionado = dayjs(dataSelecionada).month();
+    const registrosMes = todosRegistros.filter(r => dayjs(r.data).month() === mesSelecionado);
+
+    const eventosPorData = {};
+    for (const r of registrosMes) {
+      if (!eventosPorData[r.data]) eventosPorData[r.data] = {};
+      eventosPorData[r.data][r.tipo] = r.hora;
+    }
+
+    const linhas = Object.entries(eventosPorData).flatMap(([data, eventos]) => ([
+      [`Data: ${dayjs(data).format("DD/MM/YYYY")}`, "", "", ""],
+      ["Entrada", usuarioEditando.horaEntrada || "-", eventos["entrada"] || "-"],
+      ["Intervalo / Saída", usuarioEditando.horaIntervaloSaida || "-", eventos["intervalo-saida"] || "-"],
+      ["Intervalo / Retorno", usuarioEditando.horaIntervaloRetorno || "-", eventos["intervalo-retorno"] || "-"],
+      ["Saída", usuarioEditando.horaSaida || "-", eventos["saida"] || "-"],
+      ["", "", "", ""]
+    ]));
+
     const doc = new jsPDF();
-    doc.text(`Relatório de Horários - ${usuarioEditando.nome}`, 14, 14);
+    doc.text(`Relatório Mensal de Horários - ${usuarioEditando.nome}`, 14, 14);
     autoTable(doc, {
       startY: 20,
       head: [["Evento", "Horário Previsto", "Horário Registrado"]],
-      body: [
-        ["Entrada", usuarioEditando.horaEntrada || "-", registrosDoDia.find(r => r.tipo === "entrada")?.hora || "-"],
-        ["Intervalo / Saída", usuarioEditando.horaIntervaloSaida || "-", registrosDoDia.find(r => r.tipo === "intervalo-saida")?.hora || "-"],
-        ["Intervalo / Retorno", usuarioEditando.horaIntervaloRetorno || "-", registrosDoDia.find(r => r.tipo === "intervalo-retorno")?.hora || "-"],
-        ["Saída", usuarioEditando.horaSaida || "-", registrosDoDia.find(r => r.tipo === "saida")?.hora || "-"],
-      ],
+      body: linhas,
+      theme: 'striped'
     });
-    doc.save(`Ponto-${usuarioEditando.nome}.pdf`);
+    doc.save(`Ponto-Mensal-${usuarioEditando.nome}.pdf`);
   }
 
-  function exportarExcel() {
-    const ws = XLSX.utils.json_to_sheet([
-      { Evento: "Entrada", Previsto: usuarioEditando.horaEntrada || "-", Registrado: registrosDoDia.find(r => r.tipo === "entrada")?.hora || "-" },
-      { Evento: "Intervalo / Saída", Previsto: usuarioEditando.horaIntervaloSaida || "-", Registrado: registrosDoDia.find(r => r.tipo === "intervalo-saida")?.hora || "-" },
-      { Evento: "Intervalo / Retorno", Previsto: usuarioEditando.horaIntervaloRetorno || "-", Registrado: registrosDoDia.find(r => r.tipo === "intervalo-retorno")?.hora || "-" },
-      { Evento: "Saída", Previsto: usuarioEditando.horaSaida || "-", Registrado: registrosDoDia.find(r => r.tipo === "saida")?.hora || "-" },
-    ]);
+  async function exportarExcel() {
+    const res = await fetch(`http://localhost:3001/registros/${usuarioEditando.email}`);
+    const todosRegistros = await res.json();
+
+    const mesSelecionado = dayjs(dataSelecionada).month();
+    const registrosMes = todosRegistros.filter(r => dayjs(r.data).month() === mesSelecionado);
+
+    const eventosPorData = {};
+    for (const r of registrosMes) {
+      if (!eventosPorData[r.data]) eventosPorData[r.data] = {};
+      eventosPorData[r.data][r.tipo] = r.hora;
+    }
+
+    const dadosPlanilha = [];
+    Object.entries(eventosPorData).forEach(([data, eventos]) => {
+      dadosPlanilha.push({ Dia: dayjs(data).format("DD/MM/YYYY"), Evento: "", Previsto: "", Registrado: "" });
+
+      dadosPlanilha.push({ Dia: "", Evento: "Entrada", Previsto: usuarioEditando.horaEntrada || "-", Registrado: eventos["entrada"] || "-" });
+      dadosPlanilha.push({ Dia: "", Evento: "Intervalo / Saída", Previsto: usuarioEditando.horaIntervaloSaida || "-", Registrado: eventos["intervalo-saida"] || "-" });
+      dadosPlanilha.push({ Dia: "", Evento: "Intervalo / Retorno", Previsto: usuarioEditando.horaIntervaloRetorno || "-", Registrado: eventos["intervalo-retorno"] || "-" });
+      dadosPlanilha.push({ Dia: "", Evento: "Saída", Previsto: usuarioEditando.horaSaida || "-", Registrado: eventos["saida"] || "-" });
+
+      dadosPlanilha.push({});
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dadosPlanilha, { skipHeader: false });
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Registros");
-    XLSX.writeFile(wb, `Ponto-${usuarioEditando.nome}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Registros Mensais");
+    XLSX.writeFile(wb, `Ponto-Mensal-${usuarioEditando.nome}.xlsx`);
   }
+
+  const usuariosFiltrados = usuarios.filter((u) => {
+    const texto = filtro.toLowerCase();
+    return (
+      u.nome?.toLowerCase().includes(texto) ||
+      u.funcao?.toLowerCase().includes(texto) ||
+      u.email?.toLowerCase().includes(texto)
+    );
+  });
 
   return (
     <div className="max-w-6xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Gestão de Colaboradores</h2>
 
-      <table className="w-full border text-sm mb-6">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-2 py-1">Nome</th>
-            <th className="border px-2 py-1">Email</th>
-            <th className="border px-2 py-1">Função</th>
-            <th className="border px-2 py-1">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((u) => (
-            <tr key={u.email}>
-              <td className="border px-2 py-1">{u.nome}</td>
-              <td className="border px-2 py-1">{u.email}</td>
-              <td className="border px-2 py-1">{u.funcao || '-'}</td>
-              <td className="border px-2 py-1 flex flex-col sm:flex-row gap-2 justify-center items-center">
-                <button
-                  onClick={() => iniciarEdicao(u)}
-                  className="px-2 py-1 text-white bg-blue-600 rounded text-xs hover:bg-blue-700"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => deletarUsuario(u.email)}
-                  className="px-2 py-1 text-white bg-red-600 rounded text-xs hover:bg-red-700"
-                >
-                  Excluir
-                </button>
-              </td>
+      <input
+        type="text"
+        placeholder="Filtrar por nome, função ou email"
+        value={filtro}
+        onChange={(e) => setFiltro(e.target.value)}
+        className="border p-2 rounded w-full mb-4"
+      />
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border text-sm mb-6">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border px-2 py-1">Nome</th>
+              <th className="border px-2 py-1">Email</th>
+              <th className="border px-2 py-1">Função</th>
+              <th className="border px-2 py-1">Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {usuariosFiltrados.map((u) => (
+              <tr key={u.email}>
+                <td className="border px-2 py-1">{u.nome}</td>
+                <td className="border px-2 py-1">{u.email}</td>
+                <td className="border px-2 py-1">{u.funcao || '-'}</td>
+                <td className="border px-2 py-1 flex justify-center gap-2">
+                  <button
+                    onClick={() => iniciarEdicao(u)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded"
+                    title="Editar"
+                  >
+                    <PencilSquareIcon className="h-5 w-5" />
+                  </button>
+
+                  <button
+                    onClick={() => deletarUsuario(u.email)}
+                    className="bg-red-600 hover:bg-red-700 text-white p-1 rounded"
+                    title="Excluir"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {usuarioEditando && (
         <div className="bg-white border rounded p-4 shadow mt-6">
           <h3 className="text-lg font-semibold mb-4">Editar: {usuarioEditando.nome}</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Função</label>
-              <input
-                type="text"
-                value={usuarioEditando.funcao || ''}
-                onChange={(e) => setUsuarioEditando({ ...usuarioEditando, funcao: e.target.value })}
-                className="border p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Horário de Entrada</label>
-              <input
-                type="time"
-                value={usuarioEditando.horaEntrada || ''}
-                onChange={(e) => setUsuarioEditando({ ...usuarioEditando, horaEntrada: e.target.value })}
-                className="border p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Início do Intervalo</label>
-              <input
-                type="time"
-                value={usuarioEditando.horaIntervaloSaida || ''}
-                onChange={(e) => setUsuarioEditando({ ...usuarioEditando, horaIntervaloSaida: e.target.value })}
-                className="border p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Retorno do Intervalo</label>
-              <input
-                type="time"
-                value={usuarioEditando.horaIntervaloRetorno || ''}
-                onChange={(e) => setUsuarioEditando({ ...usuarioEditando, horaIntervaloRetorno: e.target.value })}
-                className="border p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Horário de Saída</label>
-              <input
-                type="time"
-                value={usuarioEditando.horaSaida || ''}
-                onChange={(e) => setUsuarioEditando({ ...usuarioEditando, horaSaida: e.target.value })}
-                className="border p-2 rounded w-full"
-              />
-            </div>
+            {[
+              { label: "Função", tipo: "text", key: "funcao" },
+              { label: "Horário de Entrada", tipo: "time", key: "horaEntrada" },
+              { label: "Início do Intervalo", tipo: "time", key: "horaIntervaloSaida" },
+              { label: "Retorno do Intervalo", tipo: "time", key: "horaIntervaloRetorno" },
+              { label: "Horário de Saída", tipo: "time", key: "horaSaida" }
+            ].map(({ label, tipo, key }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <input
+                  type={tipo}
+                  value={usuarioEditando[key] || ''}
+                  onChange={(e) => setUsuarioEditando({ ...usuarioEditando, [key]: e.target.value })}
+                  className="border p-2 rounded w-full"
+                />
+              </div>
+            ))}
+
             <div className="col-span-1 sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Selecionar Data</label>
               <input
@@ -204,7 +237,9 @@ export default function AdminColaboradoresPage() {
 
           {registrosDoDia.length > 0 && (
             <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-2">Comparativo de Horários ({dataSelecionada.split('-').reverse().join('/')})</h4>
+              <h4 className="text-sm font-semibold mb-2">
+                Comparativo de Horários ({dataSelecionada.split('-').reverse().join('/')})
+              </h4>
               <table className="w-full text-sm border">
                 <thead className="bg-gray-100">
                   <tr>
@@ -214,19 +249,19 @@ export default function AdminColaboradoresPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[ 
+                  {[
                     { tipo: "entrada", label: "Entrada", previsto: usuarioEditando.horaEntrada },
                     { tipo: "intervalo-saida", label: "Intervalo / Saída", previsto: usuarioEditando.horaIntervaloSaida },
                     { tipo: "intervalo-retorno", label: "Intervalo / Retorno", previsto: usuarioEditando.horaIntervaloRetorno },
                     { tipo: "saida", label: "Saída", previsto: usuarioEditando.horaSaida }
-                  ].map((item) => {
-                    const registro = registrosDoDia.find(r => r.tipo === item.tipo);
+                  ].map(({ tipo, label, previsto }) => {
+                    const registro = registrosDoDia.find(r => r.tipo === tipo);
                     const registrado = registro?.hora || "-";
-                    const estilo = compararHorarios(item.previsto, registrado);
+                    const estilo = compararHorarios(previsto, registrado);
                     return (
-                      <tr key={item.tipo}>
-                        <td className="border px-2 py-1">{item.label}</td>
-                        <td className="border px-2 py-1">{item.previsto || "-"}</td>
+                      <tr key={tipo}>
+                        <td className="border px-2 py-1">{label}</td>
+                        <td className="border px-2 py-1">{previsto || "-"}</td>
                         <td className={`border px-2 py-1 ${estilo}`}>{registrado}</td>
                       </tr>
                     );
