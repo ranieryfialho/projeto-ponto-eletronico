@@ -5,7 +5,8 @@ import MainLayout from './layouts/MainLayout';
 import PontoButtonComTipo from './components/PontoButtonComTipo';
 import HistoricoPontosTabela from './components/HistoricoPontosTabela';
 import CadastroUsuariosPage from './pages/CadastroUsuariosPage';
-import AdminColaboradoresPage from './pages/AdminColaboradoresPage'; // ⬅️ import novo
+import AdminColaboradoresPage from './pages/AdminColaboradoresPage';
+import DashboardAdmin from './components/DashboardAdmin'; // ✅ Import necessário
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -35,37 +36,42 @@ function App() {
             <Route path="*" element={<Login onLogin={handleLogin} />} />
           ) : (
             <>
+              {/* Rota principal se adapta conforme o tipo de usuário */}
               <Route
                 path="/"
                 element={
-                  <>
-                    <PontoButtonComTipo
-                      usuario={usuario}
-                      onLogout={handleLogout}
-                      onPontoRegistrado={() => {}}
-                    />
-                    <HistoricoPontosTabela usuario={usuario.email} />
-                  </>
+                  usuario.role === "admin" ? (
+                    <DashboardAdmin />
+                  ) : (
+                    <>
+                      <PontoButtonComTipo
+                        usuario={usuario}
+                        onLogout={handleLogout}
+                        onPontoRegistrado={() => {}}
+                      />
+                      <HistoricoPontosTabela usuario={usuario.email} />
+                    </>
+                  )
                 }
               />
 
-              {/* Rota para cadastro de usuário (apenas admin) */}
-              {usuario.role === 'admin' && (
+              {/* Rota para cadastro de usuários (admin) */}
+              {usuario.role === "admin" && (
                 <Route
                   path="/admin/cadastro"
                   element={<CadastroUsuariosPage />}
                 />
               )}
 
-              {/* Rota para gestão de colaboradores (apenas admin) */}
-              {usuario.role === 'admin' && (
+              {/* Rota para administração de colaboradores (admin) */}
+              {usuario.role === "admin" && (
                 <Route
                   path="/admin/colaboradores"
                   element={<AdminColaboradoresPage />}
                 />
               )}
 
-              {/* Redireciona qualquer outra rota para a home */}
+              {/* Redirecionamento genérico */}
               <Route path="*" element={<Navigate to="/" />} />
             </>
           )}

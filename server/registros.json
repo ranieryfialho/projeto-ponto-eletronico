@@ -1,21 +1,4 @@
 {
-  "admin@empresa.com": [
-    {
-      "tipo": "entrada",
-      "data": "2025-05-19",
-      "hora": "16:24:19"
-    },
-    {
-      "tipo": "intervalo-saida",
-      "data": "2025-05-19",
-      "hora": "17:09:20"
-    },
-    {
-      "tipo": "intervalo-retorno",
-      "data": "2025-05-19",
-      "hora": "18:33:15"
-    }
-  ],
   "ranieryfialho@gmail.com": [
     {
       "tipo": "entrada",
