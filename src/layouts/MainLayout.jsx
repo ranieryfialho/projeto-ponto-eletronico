@@ -53,7 +53,7 @@ export default function MainLayout({ children }) {
       <main className="flex-1 p-4 bg-gray-100">{children}</main>
 
       <footer className="bg-indigo-950 text-white p-2 text-center">
-        <small>&copy; 2025 Sênior Escola de Profissões</small>
+        <small>&copy;2025 <a href="https://rafiweb.com.br/">Rafi Web</a></small>
       </footer>
     </div>
   );
