@@ -25,12 +25,12 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
       (pos) => {
         const { latitude, longitude } = pos.coords;
 
-        const latEmpresa = -3.733723423876559;
-        const lonEmpresa = -38.55711889992004;
+        const latEmpresa = -3.7339052949664735;
+        const lonEmpresa = -38.55712695731955;
         const distancia = calcularDistancia(latitude, longitude, latEmpresa, lonEmpresa);
         const emRedePermitida = true;
 
-        if (distancia <= 10 && emRedePermitida) {
+        if (distancia <= 0.5 && emRedePermitida) {
           const agora = new Date();
           const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
           const hora = agora.toLocaleTimeString();
