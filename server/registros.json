@@ -1,24 +1,3 @@
 {
-  "ranieryfialho@gmail.com": [
-    {
-      "tipo": "entrada",
-      "data": "2025-05-19",
-      "hora": "19:16:59"
-    },
-    {
-      "tipo": "intervalo-saida",
-      "data": "2025-05-19",
-      "hora": "19:17:03"
-    },
-    {
-      "tipo": "intervalo-retorno",
-      "data": "2025-05-19",
-      "hora": "19:17:05"
-    },
-    {
-      "tipo": "saida",
-      "data": "2025-05-19",
-      "hora": "19:17:07"
-    }
-  ]
+  
 }
