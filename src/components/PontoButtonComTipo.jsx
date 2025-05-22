@@ -13,26 +13,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "extra-saida", label: "Horas Extras Saída" },
   ];
 
-<<<<<<< HEAD
-=======
-  async function verificarRedePermitida() {
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const data = await res.json();
-      const ipAtual = data.ip;
-
-      const ipsPermitidos = [
-        "177.37.136.51"
-      ];
-
-      return ipsPermitidos.includes(ipAtual);
-    } catch (error) {
-      console.error("Erro ao verificar IP:", error);
-      return false;
-    }
-  }
-
->>>>>>> refs/remotes/origin/main
+\ \ 
   async function registrarPonto() {
     setStatus({ tipo: "info", mensagem: "Verificando localização..." });
 
