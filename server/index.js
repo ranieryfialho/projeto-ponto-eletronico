@@ -42,7 +42,7 @@ app.post('/registros', (req, res) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
   const ipSanitizado = clientIp.replace(/^.*:/, ''); // remove "::ffff:"
 
-  const ipsPermitidosPublicos = ['177.190.208.245'];
+  const ipsPermitidosPublicos = ['104.28.61.43', '104.28.61.45'];
 
   const ipAutorizado =
     ipSanitizado.startsWith('192.168.') ||
