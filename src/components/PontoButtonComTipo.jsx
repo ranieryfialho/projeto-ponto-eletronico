@@ -43,7 +43,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           body: JSON.stringify(novoRegistro),
         })
           .then((res) => {
-            if (!res.ok) throw new Error("Erro ao enviar registro para o servidor.");
+            if (!res.ok) return res.json().then(err => { throw new Error(err.mensagem); });
             return res.json();
           })
           .then((dados) => {
@@ -57,11 +57,12 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           })
           .catch((err) => {
             console.error(err);
-            setStatus({ tipo: "erro", mensagem: "❌ Erro ao enviar registro." });
+            setStatus({ tipo: "erro", mensagem: `❌ ${err.message || "Erro ao enviar registro."}` });
           });
       },
-      () => {
-        setStatus({ tipo: "erro", mensagem: "Erro ao obter localização." });
+      (error) => {
+        console.error("Erro ao obter localização:", error);
+        setStatus({ tipo: "erro", mensagem: "❌ Erro ao obter localização. Verifique se a permissão foi concedida." });
       }
     );
   }
