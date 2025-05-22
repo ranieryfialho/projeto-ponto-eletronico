@@ -63,7 +63,7 @@ app.post('/registros', (req, res) => {
   const longitudeEscola = -38.557118275512366;
   const distancia = calcularDistancia(latitude, longitude, latitudeEscola, longitudeEscola);
 
-  if (distancia > 0.05) {
+  if (distancia > 1) {
     return res.status(403).json({ mensagem: 'Fora da área permitida para registro de ponto.' });
   }
 
