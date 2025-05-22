@@ -1,10 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrado }) {
   const [status, setStatus] = useState(null)
   const [tipo, setTipo] = useState("entrada")
+  const [registrosHoje, setRegistrosHoje] = useState([])
+  const [tiposRegistradosHoje, setTiposRegistradosHoje] = useState([])
+  const [carregando, setCarregando] = useState(false)
 
   const tiposDisponiveis = [
     { value: "entrada", label: "Entrada" },
@@ -15,7 +18,46 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "extra-saida", label: "Horas Extras Saída" },
   ]
 
+  // Carregar registros do dia atual ao iniciar
+  useEffect(() => {
+    async function carregarRegistrosHoje() {
+      if (!usuario?.email) return
+
+      try {
+        setCarregando(true)
+        const response = await fetch(`https://ponto-eletronico-8bcy.onrender.com/registros/${usuario.email}`)
+        const registros = await response.json()
+
+        // Obter a data atual no formato YYYY-MM-DD
+        const hoje = new Date().toLocaleDateString("pt-BR").split("/").reverse().join("-")
+
+        // Filtrar apenas registros de hoje
+        const registrosDeHoje = registros.filter((reg) => reg.data === hoje)
+        setRegistrosHoje(registrosDeHoje)
+
+        // Extrair os tipos já registrados hoje
+        const tipos = registrosDeHoje.map((reg) => reg.tipo)
+        setTiposRegistradosHoje(tipos)
+      } catch (error) {
+        console.error("Erro ao carregar registros:", error)
+      } finally {
+        setCarregando(false)
+      }
+    }
+
+    carregarRegistrosHoje()
+  }, [usuario?.email])
+
   async function registrarPonto() {
+    // Verificar se o tipo já foi registrado hoje
+    if (tiposRegistradosHoje.includes(tipo)) {
+      setStatus({
+        tipo: "erro",
+        mensagem: `❌ Você já registrou ponto de "${tiposDisponiveis.find((t) => t.value === tipo)?.label}" hoje. Não é possível registrar o mesmo tipo de ponto duas vezes no mesmo dia.`,
+      })
+      return
+    }
+
     setStatus({ tipo: "info", mensagem: "Verificando localização..." })
 
     if (!navigator.geolocation) {
@@ -52,15 +94,25 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
 
           if (!response.ok) {
             if (response.status === 403) {
-              setStatus({
-                tipo: "erro",
-                mensagem: "❌ Você não está em uma rede autorizada. Entre em contato com o administrador.",
-              })
+              if (dados.mensagem.includes("já registrou")) {
+                setStatus({
+                  tipo: "erro",
+                  mensagem: dados.mensagem,
+                })
+              } else {
+                setStatus({
+                  tipo: "erro",
+                  mensagem: "❌ Você não está em uma rede autorizada. Entre em contato com o administrador.",
+                })
+              }
             } else {
               setStatus({ tipo: "erro", mensagem: `❌ ${dados.mensagem || "Erro ao enviar registro."}` })
             }
             return
           }
+
+          // Atualizar a lista de tipos registrados hoje
+          setTiposRegistradosHoje([...tiposRegistradosHoje, tipo])
 
           setStatus({
             tipo: "sucesso",
@@ -121,6 +173,12 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     )
   }
 
+  // Desabilitar tipos já registrados hoje
+  const tiposDisponiveisAtualizados = tiposDisponiveis.map((t) => ({
+    ...t,
+    disabled: tiposRegistradosHoje.includes(t.value),
+  }))
+
   return (
     <div className="w-full max-w-6xl px-4 mx-auto flex flex-col gap-6">
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
@@ -141,9 +199,9 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
             onChange={(e) => setTipo(e.target.value)}
             className="px-4 py-2 border rounded-md text-sm w-full sm:w-auto"
           >
-            {tiposDisponiveis.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {tiposDisponiveisAtualizados.map((t) => (
+              <option key={t.value} value={t.value} disabled={t.disabled} className={t.disabled ? "text-gray-400" : ""}>
+                {t.label} {t.disabled ? "(Já registrado)" : ""}
               </option>
             ))}
           </select>
@@ -152,9 +210,14 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
         <div className="w-full sm:w-auto flex justify-center sm:justify-end">
           <button
             onClick={registrarPonto}
-            className="px-4 py-2 bg-indigo-900 text-white font-bold rounded hover:bg-indigo-800 transition text-sm whitespace-nowrap w-full sm:w-auto"
+            disabled={carregando || tiposRegistradosHoje.includes(tipo)}
+            className={`px-4 py-2 text-white font-bold rounded transition text-sm whitespace-nowrap w-full sm:w-auto ${
+              carregando || tiposRegistradosHoje.includes(tipo)
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-indigo-900 hover:bg-indigo-800"
+            }`}
           >
-            Registrar Ponto
+            {carregando ? "Carregando..." : "Registrar Ponto"}
           </button>
         </div>
       </div>
@@ -181,6 +244,24 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
               Como permitir localização?
             </button>
           )}
+        </div>
+      )}
+
+      {/* Resumo dos registros de hoje */}
+      {registrosHoje.length > 0 && (
+        <div className="mt-4 bg-white p-4 rounded shadow max-w-xl mx-auto w-full">
+          <h3 className="text-lg font-medium mb-2">Registros de hoje:</h3>
+          <ul className="space-y-2">
+            {registrosHoje.map((reg, index) => {
+              const tipoLabel = tiposDisponiveis.find((t) => t.value === reg.tipo)?.label || reg.tipo
+              return (
+                <li key={index} className="flex justify-between items-center border-b pb-1 last:border-0">
+                  <span className="font-medium">{tipoLabel}:</span>
+                  <span>{reg.hora}</span>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       )}
     </div>

@@ -35,6 +35,19 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
   return R * c // em km
 }
 
+// Função para obter o nome do tipo de registro
+function getNomeTipo(tipo) {
+  const tipos = {
+    entrada: "Entrada",
+    "intervalo-saida": "Intervalo / Saída",
+    "intervalo-retorno": "Intervalo / Retorno",
+    saida: "Saída",
+    "extra-entrada": "Horas Extras Entrada",
+    "extra-saida": "Horas Extras Saída",
+  }
+  return tipos[tipo] || tipo
+}
+
 // ---------- ENDPOINTS ----------
 
 app.post("/registros", (req, res) => {
@@ -69,6 +82,17 @@ app.post("/registros", (req, res) => {
   try {
     const raw = fs.readFileSync(DB_PATH, "utf8")
     const registros = raw ? JSON.parse(raw) : {}
+
+    // Verificar se já existe um registro do mesmo tipo para o usuário no mesmo dia
+    if (registros[usuario]) {
+      const registroExistente = registros[usuario].find((reg) => reg.data === data && reg.tipo === tipo)
+      if (registroExistente) {
+        const nomeTipo = getNomeTipo(tipo)
+        return res.status(403).json({
+          mensagem: `Você já registrou ponto de "${nomeTipo}" hoje às ${registroExistente.hora}. Não é possível registrar o mesmo tipo de ponto duas vezes no mesmo dia.`,
+        })
+      }
+    }
 
     if (!registros[usuario]) {
       registros[usuario] = []
@@ -216,6 +240,17 @@ app.delete("/usuarios/:email", (req, res) => {
   } catch (err) {
     console.error("❌ Erro ao deletar usuário:", err)
     res.status(500).json({ mensagem: "Erro ao deletar usuário." })
+  }
+})
+
+// Endpoint para baixar o arquivo registros.json
+app.get("/download/registros", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "registros.json")
+    res.download(filePath, "registros.json")
+  } catch (err) {
+    console.error("❌ Erro ao baixar registros:", err)
+    res.status(500).json({ mensagem: "Erro ao baixar os registros." })
   }
 })
 
