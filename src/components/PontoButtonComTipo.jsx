@@ -13,6 +13,26 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "extra-saida", label: "Horas Extras Saída" },
   ];
 
+<<<<<<< HEAD
+=======
+  async function verificarRedePermitida() {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      const ipAtual = data.ip;
+
+      const ipsPermitidos = [
+        "177.37.136.51"
+      ];
+
+      return ipsPermitidos.includes(ipAtual);
+    } catch (error) {
+      console.error("Erro ao verificar IP:", error);
+      return false;
+    }
+  }
+
+>>>>>>> refs/remotes/origin/main
   async function registrarPonto() {
     setStatus({ tipo: "info", mensagem: "Verificando localização..." });
 
@@ -37,6 +57,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           longitude
         };
 
+<<<<<<< HEAD
         fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -45,6 +66,24 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           .then((res) => {
             if (!res.ok) throw new Error("Erro ao enviar registro para o servidor.");
             return res.json();
+=======
+        if (distancia <= 0.2 && emRedePermitida) {
+          const agora = new Date();
+          const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
+          const hora = agora.toLocaleTimeString();
+
+          const novoRegistro = {
+            usuario: usuario.email,
+            tipo,
+            data,
+            hora
+          };
+
+          fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(novoRegistro),
+>>>>>>> refs/remotes/origin/main
           })
           .then((dados) => {
             setStatus({
