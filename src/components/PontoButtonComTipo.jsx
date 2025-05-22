@@ -59,7 +59,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
             hora
           };
 
-          fetch("http://localhost:3001/registros", {
+          fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(novoRegistro),

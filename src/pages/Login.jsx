@@ -20,7 +20,7 @@ export default function Login({ onLogin }) {
     setCarregando(true);
 
     try {
-      const res = await fetch("http://localhost:3001/login", {
+      const res = await fetch("https://ponto-eletronico-8bcy.onrender.com/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

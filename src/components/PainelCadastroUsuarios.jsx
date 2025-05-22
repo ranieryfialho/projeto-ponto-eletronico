@@ -14,7 +14,7 @@ export default function PainelCadastroUsuarios() {
     setCarregando(true);
 
     try {
-      const res = await fetch("http://localhost:3001/usuarios", {
+      const res = await fetch("https://ponto-eletronico-8bcy.onrender.com/usuarios", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

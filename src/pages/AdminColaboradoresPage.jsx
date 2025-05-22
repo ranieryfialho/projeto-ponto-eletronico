@@ -13,12 +13,14 @@ export default function AdminColaboradoresPage() {
   const [dataSelecionada, setDataSelecionada] = useState(dayjs().format('YYYY-MM-DD'));
   const [filtro, setFiltro] = useState('');
 
+  const API = "https://ponto-eletronico-8bcy.onrender.com";
+
   useEffect(() => {
     buscarUsuarios();
   }, []);
 
   async function buscarUsuarios() {
-    const res = await fetch("http://localhost:3001/usuarios");
+    const res = await fetch(`${API}/usuarios`);
     const dados = await res.json();
     setUsuarios(dados);
   }
@@ -31,7 +33,7 @@ export default function AdminColaboradoresPage() {
 
   async function buscarRegistros(email, data) {
     try {
-      const res = await fetch(`http://localhost:3001/registros/${email}`);
+      const res = await fetch(`${API}/registros/${email}`);
       const dados = await res.json();
       const filtrados = dados.filter(r => r.data === data);
       setRegistrosDoDia(filtrados);
@@ -46,7 +48,7 @@ export default function AdminColaboradoresPage() {
   }
 
   async function salvarEdicao() {
-    const res = await fetch(`http://localhost:3001/usuarios/${usuarioEditando.email}`, {
+    const res = await fetch(`${API}/usuarios/${usuarioEditando.email}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(usuarioEditando),
@@ -60,7 +62,7 @@ export default function AdminColaboradoresPage() {
 
   async function deletarUsuario(email) {
     if (!window.confirm("Tem certeza que deseja excluir este usuário?")) return;
-    await fetch(`http://localhost:3001/usuarios/${email}`, { method: "DELETE" });
+    await fetch(`${API}/usuarios/${email}`, { method: "DELETE" });
     buscarUsuarios();
   }
 
@@ -75,7 +77,7 @@ export default function AdminColaboradoresPage() {
   }
 
   async function exportarPDF() {
-    const res = await fetch(`http://localhost:3001/registros/${usuarioEditando.email}`);
+    const res = await fetch(`${API}/registros/${usuarioEditando.email}`);
     const todosRegistros = await res.json();
 
     const mesSelecionado = dayjs(dataSelecionada).month();
@@ -108,7 +110,7 @@ export default function AdminColaboradoresPage() {
   }
 
   async function exportarExcel() {
-    const res = await fetch(`http://localhost:3001/registros/${usuarioEditando.email}`);
+    const res = await fetch(`${API}/registros/${usuarioEditando.email}`);
     const todosRegistros = await res.json();
 
     const mesSelecionado = dayjs(dataSelecionada).month();

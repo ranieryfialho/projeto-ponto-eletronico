@@ -13,7 +13,7 @@ export default function HistoricoPontosTabela({ usuario }) {
       if (!usuario) return
 
       try {
-        const res = await fetch(`http://localhost:3001/registros/${usuario}`)
+        const res = await fetch(`https://ponto-eletronico-8bcy.onrender.com/registros/${usuario}`)
         const dados = await res.json()
 
         const agrupado = {}

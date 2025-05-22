@@ -7,8 +7,8 @@ export default function DashboardAdmin({ onLogout }) {
 
   useEffect(() => {
     async function fetchData() {
-      const usuariosRes = await fetch("http://localhost:3001/usuarios")
-      const registrosRes = await fetch("http://localhost:3001/registros")
+      const usuariosRes = await fetch("https://ponto-eletronico-8bcy.onrender.com/usuarios")
+      const registrosRes = await fetch("https://ponto-eletronico-8bcy.onrender.com/registros")
 
       const usuariosData = await usuariosRes.json()
       const registrosData = await registrosRes.json()
