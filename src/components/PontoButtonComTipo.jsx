@@ -47,7 +47,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
         const distancia = calcularDistancia(latitude, longitude, latEmpresa, lonEmpresa);
         const emRedePermitida = await verificarRedePermitida();
 
-        if (distancia <= 0.2 && emRedePermitida) {
+        if (distancia <= 1 && emRedePermitida) {
           const agora = new Date();
           const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
           const hora = agora.toLocaleTimeString();
