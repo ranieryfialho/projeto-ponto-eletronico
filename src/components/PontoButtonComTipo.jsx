@@ -69,6 +69,12 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           })
 
           if (onPontoRegistrado) onPontoRegistrado(novoRegistro)
+
+          // Adicionar um pequeno delay antes de recarregar a página
+          // para que o usuário possa ver a mensagem de sucesso
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500) // 1.5 segundos de delay
         } catch (err) {
           console.error("Erro na requisição:", err)
           setStatus({
