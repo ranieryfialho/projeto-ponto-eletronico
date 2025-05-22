@@ -19,26 +19,6 @@
       "tipo": "saida",
       "data": "2025-05-19",
       "hora": "19:17:07"
-    },
-    {
-      "tipo": "intervalo-retorno",
-      "data": "2025-05-20",
-      "hora": "13:20:41"
-    },
-    {
-      "tipo": "saida",
-      "data": "2025-05-20",
-      "hora": "15:45:41"
-    },
-    {
-      "tipo": "entrada",
-      "data": "2025-05-21",
-      "hora": "13:11:32"
-    },
-    {
-      "tipo": "intervalo-saida",
-      "data": "2025-05-21",
-      "hora": "15:07:53"
     }
   ]
 }

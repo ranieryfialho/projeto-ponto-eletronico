@@ -13,7 +13,24 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "extra-saida", label: "Horas Extras Saída" },
   ];
 
-  function registrarPonto() {
+  async function verificarRedePermitida() {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      const ipAtual = data.ip;
+
+      const ipsPermitidos = [
+        "177.190.208.245"
+      ];
+
+      return ipsPermitidos.includes(ipAtual);
+    } catch (error) {
+      console.error("Erro ao verificar IP:", error);
+      return false;
+    }
+  }
+
+  async function registrarPonto() {
     setStatus({ tipo: "info", mensagem: "Verificando localização..." });
 
     if (!navigator.geolocation) {
@@ -22,15 +39,15 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords;
 
-        const latEmpresa = -3.733723423876559;
-        const lonEmpresa = -38.55711889992004;
+        const latEmpresa = -3.7339052949664735;
+        const lonEmpresa = -38.55712695731955;
         const distancia = calcularDistancia(latitude, longitude, latEmpresa, lonEmpresa);
-        const emRedePermitida = true;
+        const emRedePermitida = await verificarRedePermitida();
 
-        if (distancia <= 10 && emRedePermitida) {
+        if (distancia <= 0.002 && emRedePermitida) {
           const agora = new Date();
           const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
           const hora = agora.toLocaleTimeString();
@@ -44,9 +61,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
 
           fetch("http://localhost:3001/registros", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(novoRegistro),
           })
             .then((res) => {
@@ -60,19 +75,14 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
                 hora,
               });
 
-              if (onPontoRegistrado) {
-                onPontoRegistrado(novoRegistro);
-              }
+              if (onPontoRegistrado) onPontoRegistrado(novoRegistro);
             })
             .catch((err) => {
               console.error(err);
-              setStatus({
-                tipo: "erro",
-                mensagem: "❌ Erro ao enviar registro.",
-              });
+              setStatus({ tipo: "erro", mensagem: "❌ Erro ao enviar registro." });
             });
         } else {
-          setStatus({ tipo: "erro", mensagem: "❌ Fora da geolocalização permitida." });
+          setStatus({ tipo: "erro", mensagem: "❌ Fora da geolocalização ou rede não autorizada." });
         }
       },
       () => {
@@ -95,7 +105,6 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
 
   return (
     <div className="w-full max-w-6xl px-4 mx-auto flex flex-col gap-6">
-      {/* Saudação + Botão sair */}
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
         <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">
           Olá, {usuario.nome}! 👋
@@ -109,7 +118,6 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 w-full max-w-5xl">
-        {/* Label + Select */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <label htmlFor="tipo" className="text-base font-medium text-gray-700">
             Tipo de Registro:
@@ -128,7 +136,6 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           </select>
         </div>
 
-        {/* Botão à direita no desktop, abaixo no mobile */}
         <div className="w-full sm:w-auto flex justify-center sm:justify-end">
           <button
             onClick={registrarPonto}
@@ -139,15 +146,15 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
         </div>
       </div>
 
-      {/* Feedback visual */}
       {status?.mensagem && (
         <div
-          className={`text-sm px-4 py-2 rounded shadow max-w-xl mx-auto ${status.tipo === "sucesso"
-            ? "bg-green-100 text-green-700 border border-green-300"
-            : status.tipo === "erro"
+          className={`text-sm px-4 py-2 rounded shadow max-w-xl mx-auto ${
+            status.tipo === "sucesso"
+              ? "bg-green-100 text-green-700 border border-green-300"
+              : status.tipo === "erro"
               ? "bg-red-100 text-red-700 border border-red-300"
               : "bg-blue-100 text-blue-700 border border-blue-300"
-            }`}
+          }`}
         >
           <span className="font-semibold">{status.mensagem}</span>
           {status.hora && (

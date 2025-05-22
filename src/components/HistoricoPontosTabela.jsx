@@ -1,13 +1,9 @@
-"use client"
-
 import { useEffect, useState } from "react"
 
 export default function HistoricoPontosTabela({ usuario }) {
   const [registrosPorData, setRegistrosPorData] = useState({})
 
-  // Função para formatar a data corretamente
   function formatarData(dataString) {
-    // Garantir que a data seja interpretada corretamente
     const [ano, mes, dia] = dataString.split("-")
     return `${dia}/${mes}/${ano}`
   }
