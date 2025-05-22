@@ -24,13 +24,43 @@ if (!fs.existsSync(USERS_PATH)) {
   fs.writeFileSync(USERS_PATH, JSON.stringify([]));
 }
 
+// Função para calcular distância geográfica (fórmula de Haversine)
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Raio da Terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 // ---------- REGISTROS ----------
 
 app.post('/registros', (req, res) => {
-  const { usuario, tipo, data, hora } = req.body;
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const ipAutorizado = clientIp.startsWith('192.168.') || clientIp.startsWith('10.0.');
 
-  if (!usuario || !tipo || !data || !hora) {
-    return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios.' });
+  if (!ipAutorizado) {
+    return res.status(403).json({ mensagem: 'Registro de ponto permitido apenas na rede local da escola.' });
+  }
+
+  const { usuario, tipo, data, hora, latitude, longitude } = req.body;
+
+  if (!usuario || !tipo || !data || !hora || !latitude || !longitude) {
+    return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios, incluindo localização.' });
+  }
+
+  const latitudeEscola = -3.7339186410987746;
+  const longitudeEscola = -38.557118275512366;
+
+  const distancia = calcularDistancia(latitude, longitude, latitudeEscola, longitudeEscola);
+  if (distancia > 0.002) {
+    return res.status(403).json({ mensagem: 'Fora da área permitida para registro de ponto.' });
   }
 
   try {
@@ -41,7 +71,7 @@ app.post('/registros', (req, res) => {
       registros[usuario] = [];
     }
 
-    registros[usuario].push({ tipo, data, hora });
+    registros[usuario].push({ tipo, data, hora, latitude, longitude, ip: clientIp });
 
     fs.writeFileSync(DB_PATH, JSON.stringify(registros, null, 2));
     res.status(201).json({ mensagem: `Registro salvo com sucesso para ${usuario}.` });
