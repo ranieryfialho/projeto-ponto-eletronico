@@ -1,8 +1,10 @@
-import { useState } from "react";
+"use client"
+
+import { useState } from "react"
 
 export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrado }) {
-  const [status, setStatus] = useState(null);
-  const [tipo, setTipo] = useState("entrada");
+  const [status, setStatus] = useState(null)
+  const [tipo, setTipo] = useState("entrada")
 
   const tiposDisponiveis = [
     { value: "entrada", label: "Entrada" },
@@ -11,22 +13,24 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "saida", label: "Saída" },
     { value: "extra-entrada", label: "Horas Extras Entrada" },
     { value: "extra-saida", label: "Horas Extras Saída" },
-  ];
+  ]
 
   async function registrarPonto() {
-    setStatus({ tipo: "info", mensagem: "Verificando localização..." });
+    setStatus({ tipo: "info", mensagem: "Verificando localização..." })
 
     if (!navigator.geolocation) {
-      setStatus({ tipo: "erro", mensagem: "Seu navegador não suporta geolocalização." });
-      return;
+      setStatus({ tipo: "erro", mensagem: "Seu navegador não suporta geolocalização." })
+      return
     }
 
+    // Solicitar permissão de geolocalização com instruções claras
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const agora = new Date();
-        const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
-        const hora = agora.toLocaleTimeString();
+        // Código existente para obter posição e enviar dados
+        const { latitude, longitude } = pos.coords
+        const agora = new Date()
+        const data = agora.toLocaleDateString("pt-BR").split("/").reverse().join("-")
+        const hora = agora.toLocaleTimeString()
 
         const novoRegistro = {
           usuario: usuario.email,
@@ -34,49 +38,88 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
           data,
           hora,
           latitude,
-          longitude
-        };
+          longitude,
+        }
 
-        fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(novoRegistro),
-        })
-          .then((res) => {
-            if (!res.ok) return res.json().then(err => { throw new Error(err.mensagem); });
-            return res.json();
+        try {
+          const response = await fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(novoRegistro),
           })
-          .then((dados) => {
-            setStatus({
-              tipo: "sucesso",
-              mensagem: dados.mensagem || "Registro enviado com sucesso!",
-              hora,
-            });
 
-            if (onPontoRegistrado) onPontoRegistrado(novoRegistro);
+          const dados = await response.json()
+
+          if (!response.ok) {
+            if (response.status === 403) {
+              setStatus({
+                tipo: "erro",
+                mensagem: "❌ Você não está em uma rede autorizada. Entre em contato com o administrador.",
+              })
+            } else {
+              setStatus({ tipo: "erro", mensagem: `❌ ${dados.mensagem || "Erro ao enviar registro."}` })
+            }
+            return
+          }
+
+          setStatus({
+            tipo: "sucesso",
+            mensagem: dados.mensagem || "Registro enviado com sucesso!",
+            hora,
           })
-          .catch((err) => {
-            console.error(err);
-            setStatus({ tipo: "erro", mensagem: `❌ ${err.message || "Erro ao enviar registro."}` });
-          });
+
+          if (onPontoRegistrado) onPontoRegistrado(novoRegistro)
+        } catch (err) {
+          console.error("Erro na requisição:", err)
+          setStatus({
+            tipo: "erro",
+            mensagem: "❌ Erro de conexão com o servidor. Verifique sua internet.",
+          })
+        }
       },
       (error) => {
-        console.error("Erro ao obter localização:", error);
-        setStatus({ tipo: "erro", mensagem: "❌ Erro ao obter localização. Verifique se a permissão foi concedida." });
-      }
-    );
+        console.error("Erro ao obter localização:", error)
+
+        // Mensagens específicas para cada código de erro de geolocalização
+        let mensagemErro = "❌ Erro ao obter localização."
+
+        switch (error.code) {
+          case 1: // PERMISSION_DENIED
+            mensagemErro =
+              "❌ Permissão de localização negada. Por favor, permita o acesso à sua localização nas configurações do navegador e tente novamente."
+            break
+          case 2: // POSITION_UNAVAILABLE
+            mensagemErro = "❌ Localização indisponível. Verifique se o GPS está ativado."
+            break
+          case 3: // TIMEOUT
+            mensagemErro = "❌ Tempo esgotado ao obter localização. Tente novamente."
+            break
+        }
+
+        setStatus({ tipo: "erro", mensagem: mensagemErro })
+      },
+      // Adicionar opções para melhorar a precisão
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    )
+  }
+
+  // Adicione esta função após a função registrarPonto()
+  function abrirConfiguracoesLocalizacao() {
+    // Abrir página de ajuda sobre como permitir localização
+    alert(
+      "Para permitir acesso à localização:\n\n1. Clique no ícone de cadeado/informações na barra de endereço\n2. Encontre 'Localização' nas permissões\n3. Selecione 'Permitir'\n4. Recarregue a página",
+    )
   }
 
   return (
     <div className="w-full max-w-6xl px-4 mx-auto flex flex-col gap-6">
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 w-full">
-        <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">
-          Olá, {usuario.nome}! 👋
-        </p>
-        <button
-          onClick={onLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded shadow hover:bg-red-700 text-sm"
-        >
+        <p className="text-2xl sm:text-4xl font-medium text-center sm:text-left">Olá, {usuario.nome}! 👋</p>
+        <button onClick={onLogout} className="px-4 py-2 bg-red-600 text-white rounded shadow hover:bg-red-700 text-sm">
           Sair
         </button>
       </div>
@@ -116,16 +159,24 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
             status.tipo === "sucesso"
               ? "bg-green-100 text-green-700 border border-green-300"
               : status.tipo === "erro"
-              ? "bg-red-100 text-red-700 border border-red-300"
-              : "bg-blue-100 text-blue-700 border border-blue-300"
+                ? "bg-red-100 text-red-700 border border-red-300"
+                : "bg-blue-100 text-blue-700 border border-blue-300"
           }`}
         >
           <span className="font-semibold">{status.mensagem}</span>
-          {status.hora && (
-            <div className="text-xs text-gray-500 mt-1">Horário: {status.hora}</div>
+          {status.hora && <div className="text-xs text-gray-500 mt-1">Horário: {status.hora}</div>}
+
+          {/* Botão de ajuda para problemas de localização */}
+          {status.tipo === "erro" && status.mensagem.includes("localização") && (
+            <button
+              onClick={abrirConfiguracoesLocalizacao}
+              className="mt-2 text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+            >
+              Como permitir localização?
+            </button>
           )}
         </div>
       )}
     </div>
-  );
+  )
 }
