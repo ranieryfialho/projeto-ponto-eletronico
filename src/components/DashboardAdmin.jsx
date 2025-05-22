@@ -1,5 +1,8 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import dayjs from "dayjs"
+import { Link } from "react-router-dom"
 
 export default function DashboardAdmin({ onLogout }) {
   const [usuarios, setUsuarios] = useState([])
@@ -35,18 +38,47 @@ export default function DashboardAdmin({ onLogout }) {
   return (
     <div className="h-full w-full bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Título e botão de saída */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Título e botões de ação */}
+        <div className="flex flex-wrap items-center justify-between mb-8 gap-3">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            <span role="img" aria-label="gráfico">📈</span>
+            <span role="img" aria-label="gráfico">
+              📈
+            </span>
             Dashboard Administrativo
           </h1>
-          <button
-            onClick={onLogout}
-            className="bg-red-700 text-white px-4 py-2 rounded-md shadow hover:bg-red-600 transition"
-          >
-            Sair
-          </button>
+
+          <div className="flex flex-wrap gap-3">
+            {/* Botões de navegação rápida */}
+            <div className="flex gap-2">
+              <Link
+                to="/admin/registros"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition flex items-center gap-1"
+              >
+                <span role="img" aria-label="lista">
+                  📋
+                </span>
+                Registros de Ponto
+              </Link>
+
+              <Link
+                to="/admin/colaboradores"
+                className="bg-green-600 text-white px-4 py-2 rounded-md shadow hover:bg-green-700 transition flex items-center gap-1"
+              >
+                <span role="img" aria-label="pessoas">
+                  👥
+                </span>
+                Colaboradores
+              </Link>
+            </div>
+
+            {/* Botão de logout */}
+            <button
+              onClick={onLogout}
+              className="bg-red-700 text-white px-4 py-2 rounded-md shadow hover:bg-red-600 transition"
+            >
+              Sair
+            </button>
+          </div>
         </div>
 
         {/* Cards de resumo */}
@@ -58,10 +90,18 @@ export default function DashboardAdmin({ onLogout }) {
         </div>
 
         {/* Tabela de registros */}
-        <h2 className="text-xl font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <span role="img" aria-label="relógio">🕒</span>
-          Últimos registros de hoje
-        </h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
+            <span role="img" aria-label="relógio">
+              🕒
+            </span>
+            Últimos registros de hoje
+          </h2>
+
+          <Link to="/admin/registros" className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+            Ver todos os registros
+          </Link>
+        </div>
 
         <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
           <div className="overflow-x-auto">
@@ -81,9 +121,7 @@ export default function DashboardAdmin({ onLogout }) {
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 sm:px-6 py-4 text-sm text-gray-700 truncate max-w-[200px]">{r.email}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm text-gray-700">{r.hora}</td>
-                      <td className="px-4 sm:px-6 py-4 text-sm text-gray-700 capitalize">
-                        {r.tipo.replace("-", " ")}
-                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-sm text-gray-700 capitalize">{r.tipo.replace("-", " ")}</td>
                     </tr>
                   ))}
                 {registrosHoje.length === 0 && (
