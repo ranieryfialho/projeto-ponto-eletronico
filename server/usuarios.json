@@ -1,8 +1,8 @@
 [
   {
     "nome": "Administrador",
-    "email": "admin@empresa.com",
-    "senha": "123456",
+    "email": "admin",
+    "senha": "Seven@2025",
     "cpf": "000.000.000-00",
     "role": "admin"
   },
