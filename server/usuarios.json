@@ -1,7 +1,7 @@
 [
   {
     "nome": "Administrador",
-    "email": "admin",
+    "email": "admin@senior.com.br",
     "senha": "Seven@2025",
     "cpf": "000.000.000-00",
     "role": "admin"
