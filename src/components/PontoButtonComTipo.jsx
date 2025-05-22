@@ -20,7 +20,7 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
       const ipAtual = data.ip;
 
       const ipsPermitidos = [
-        "177.190.208.245"
+        "177.37.136.51"
       ];
 
       return ipsPermitidos.includes(ipAtual);
