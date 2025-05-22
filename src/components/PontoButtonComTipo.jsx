@@ -13,23 +13,6 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     { value: "extra-saida", label: "Horas Extras Saída" },
   ];
 
-  async function verificarRedePermitida() {
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const data = await res.json();
-      const ipAtual = data.ip;
-
-      const ipsPermitidos = [
-        "177.190.208.245"
-      ];
-
-      return ipsPermitidos.includes(ipAtual);
-    } catch (error) {
-      console.error("Erro ao verificar IP:", error);
-      return false;
-    }
-  }
-
   async function registrarPonto() {
     setStatus({ tipo: "info", mensagem: "Verificando localização..." });
 
@@ -41,66 +24,46 @@ export default function PontoButtonComTipo({ usuario, onLogout, onPontoRegistrad
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
+        const agora = new Date();
+        const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
+        const hora = agora.toLocaleTimeString();
 
-        const latEmpresa = -3.7339052949664735;
-        const lonEmpresa = -38.55712695731955;
-        const distancia = calcularDistancia(latitude, longitude, latEmpresa, lonEmpresa);
-        const emRedePermitida = await verificarRedePermitida();
+        const novoRegistro = {
+          usuario: usuario.email,
+          tipo,
+          data,
+          hora,
+          latitude,
+          longitude
+        };
 
-        if (distancia <= 0.02 && emRedePermitida) {
-          const agora = new Date();
-          const data = agora.toLocaleDateString('pt-BR').split('/').reverse().join('-');
-          const hora = agora.toLocaleTimeString();
-
-          const novoRegistro = {
-            usuario: usuario.email,
-            tipo,
-            data,
-            hora
-          };
-
-          fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(novoRegistro),
+        fetch("https://ponto-eletronico-8bcy.onrender.com/registros", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(novoRegistro),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erro ao enviar registro para o servidor.");
+            return res.json();
           })
-            .then((res) => {
-              if (!res.ok) throw new Error("Erro ao enviar registro para o servidor.");
-              return res.json();
-            })
-            .then((dados) => {
-              setStatus({
-                tipo: "sucesso",
-                mensagem: dados.mensagem || "Registro enviado com sucesso!",
-                hora,
-              });
-
-              if (onPontoRegistrado) onPontoRegistrado(novoRegistro);
-            })
-            .catch((err) => {
-              console.error(err);
-              setStatus({ tipo: "erro", mensagem: "❌ Erro ao enviar registro." });
+          .then((dados) => {
+            setStatus({
+              tipo: "sucesso",
+              mensagem: dados.mensagem || "Registro enviado com sucesso!",
+              hora,
             });
-        } else {
-          setStatus({ tipo: "erro", mensagem: "❌ Fora da geolocalização ou rede não autorizada." });
-        }
+
+            if (onPontoRegistrado) onPontoRegistrado(novoRegistro);
+          })
+          .catch((err) => {
+            console.error(err);
+            setStatus({ tipo: "erro", mensagem: "❌ Erro ao enviar registro." });
+          });
       },
       () => {
         setStatus({ tipo: "erro", mensagem: "Erro ao obter localização." });
       }
     );
-  }
-
-  function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const toRad = (v) => (v * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
   }
 
   return (

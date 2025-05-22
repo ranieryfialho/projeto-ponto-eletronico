@@ -16,15 +16,12 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({}));
-}
+// Garante que os arquivos existam
+if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, JSON.stringify({}));
+if (!fs.existsSync(USERS_PATH)) fs.writeFileSync(USERS_PATH, JSON.stringify([]));
 
-if (!fs.existsSync(USERS_PATH)) {
-  fs.writeFileSync(USERS_PATH, JSON.stringify([]));
-}
+// ---------- FUNÇÃO AUXILIAR ----------
 
-// Função para calcular distância geográfica (fórmula de Haversine)
 function calcularDistancia(lat1, lon1, lat2, lon2) {
   const R = 6371; // Raio da Terra em km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -36,17 +33,24 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     Math.sin(dLon / 2) ** 2;
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * c; // em km
 }
 
-// ---------- REGISTROS ----------
+// ---------- ENDPOINTS ----------
 
 app.post('/registros', (req, res) => {
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const ipAutorizado = clientIp.startsWith('192.168.') || clientIp.startsWith('10.0.');
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  const ipSanitizado = clientIp.replace(/^.*:/, ''); // remove "::ffff:"
+
+  const ipsPermitidosPublicos = ['177.190.208.245'];
+
+  const ipAutorizado =
+    ipSanitizado.startsWith('192.168.') ||
+    ipSanitizado.startsWith('10.') ||
+    ipsPermitidosPublicos.includes(ipSanitizado);
 
   if (!ipAutorizado) {
-    return res.status(403).json({ mensagem: 'Registro de ponto permitido apenas na rede local da escola.' });
+    return res.status(403).json({ mensagem: 'Registro de ponto permitido apenas na rede autorizada.' });
   }
 
   const { usuario, tipo, data, hora, latitude, longitude } = req.body;
@@ -57,9 +61,9 @@ app.post('/registros', (req, res) => {
 
   const latitudeEscola = -3.7339186410987746;
   const longitudeEscola = -38.557118275512366;
-
   const distancia = calcularDistancia(latitude, longitude, latitudeEscola, longitudeEscola);
-  if (distancia > 0.002) {
+
+  if (distancia > 0.05) {
     return res.status(403).json({ mensagem: 'Fora da área permitida para registro de ponto.' });
   }
 
@@ -71,7 +75,14 @@ app.post('/registros', (req, res) => {
       registros[usuario] = [];
     }
 
-    registros[usuario].push({ tipo, data, hora, latitude, longitude, ip: clientIp });
+    registros[usuario].push({
+      tipo,
+      data,
+      hora,
+      latitude,
+      longitude,
+      ip: ipSanitizado
+    });
 
     fs.writeFileSync(DB_PATH, JSON.stringify(registros, null, 2));
     res.status(201).json({ mensagem: `Registro salvo com sucesso para ${usuario}.` });
@@ -84,8 +95,7 @@ app.post('/registros', (req, res) => {
 app.get('/registros', (req, res) => {
   try {
     const data = fs.readFileSync(DB_PATH, 'utf8');
-    const registros = JSON.parse(data);
-    res.json(registros);
+    res.json(JSON.parse(data));
   } catch (err) {
     console.error('❌ Erro ao ler registros:', err);
     res.status(500).json({ mensagem: 'Erro ao ler os registros.' });
@@ -105,8 +115,6 @@ app.get('/registros/:usuario', (req, res) => {
   }
 });
 
-// ---------- LOGIN ----------
-
 app.post('/login', (req, res) => {
   const { email, senha } = req.body;
 
@@ -117,7 +125,6 @@ app.post('/login', (req, res) => {
   try {
     const data = fs.readFileSync(USERS_PATH, 'utf8');
     const usuarios = JSON.parse(data);
-
     const usuario = usuarios.find(u => u.email === email && u.senha === senha);
 
     if (usuario) {
@@ -137,8 +144,6 @@ app.post('/login', (req, res) => {
   }
 });
 
-// ---------- USUÁRIOS ----------
-
 app.post('/usuarios', (req, res) => {
   const { nome, email, senha, cpf, role = 'user' } = req.body;
 
@@ -147,17 +152,15 @@ app.post('/usuarios', (req, res) => {
   }
 
   try {
-    const data = fs.existsSync(USERS_PATH) ? fs.readFileSync(USERS_PATH, 'utf8') : '[]';
+    const data = fs.readFileSync(USERS_PATH, 'utf8');
     const usuarios = JSON.parse(data);
 
-    const existe = usuarios.find(u => u.email === email);
-    if (existe) {
+    if (usuarios.find(u => u.email === email)) {
       return res.status(409).json({ mensagem: 'Usuário já existe.' });
     }
 
     usuarios.push({ nome, email, senha, cpf, role });
     fs.writeFileSync(USERS_PATH, JSON.stringify(usuarios, null, 2));
-
     res.status(201).json({ mensagem: 'Usuário criado com sucesso.' });
   } catch (err) {
     console.error('❌ Erro ao criar usuário:', err);
@@ -168,8 +171,7 @@ app.post('/usuarios', (req, res) => {
 app.get('/usuarios', (req, res) => {
   try {
     const data = fs.readFileSync(USERS_PATH, 'utf8');
-    const usuarios = JSON.parse(data);
-    res.json(usuarios);
+    res.json(JSON.parse(data));
   } catch (err) {
     console.error('❌ Erro ao ler usuários:', err);
     res.status(500).json({ mensagem: 'Erro ao ler os usuários.' });
@@ -182,9 +184,9 @@ app.put('/usuarios/:email', (req, res) => {
 
   try {
     const data = fs.readFileSync(USERS_PATH, 'utf8');
-    let usuarios = JSON.parse(data);
-
+    const usuarios = JSON.parse(data);
     const indice = usuarios.findIndex(u => u.email === emailParam);
+
     if (indice === -1) {
       return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
     }
@@ -203,14 +205,14 @@ app.delete('/usuarios/:email', (req, res) => {
 
   try {
     const data = fs.readFileSync(USERS_PATH, 'utf8');
-    let usuarios = JSON.parse(data);
+    const usuarios = JSON.parse(data);
+    const novosUsuarios = usuarios.filter(u => u.email !== emailParam);
 
-    const filtrados = usuarios.filter(u => u.email !== emailParam);
-    if (filtrados.length === usuarios.length) {
+    if (novosUsuarios.length === usuarios.length) {
       return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
     }
 
-    fs.writeFileSync(USERS_PATH, JSON.stringify(filtrados, null, 2));
+    fs.writeFileSync(USERS_PATH, JSON.stringify(novosUsuarios, null, 2));
     res.status(200).json({ mensagem: 'Usuário deletado com sucesso.' });
   } catch (err) {
     console.error('❌ Erro ao deletar usuário:', err);
